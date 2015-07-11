@@ -50,14 +50,13 @@ public class FindTest {
 		DB database = client.getDB("france");
 		DBCollection collection = database.getCollection("Recherche_avancee3");
 		
-		DBObject ref = new BasicDBObject();
-		DBObject key = new BasicDBObject();
-		key.put("Dénomination sociale", "ASTRAZENECA");
-		
-		DBCursor cursor = collection.find(ref, key);
+		DBObject query = new BasicDBObject();
+		query.put("Dénomination sociale", "ASTRAZENECA");
+
+		DBCursor cursor = collection.find(query);
 		System.out.println(cursor.count());
 		System.out.println(cursor.size());
-		
+
 		client.close();
 	}
 
