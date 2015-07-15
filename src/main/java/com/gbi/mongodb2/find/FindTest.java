@@ -40,18 +40,18 @@ public class FindTest {
 	public static void findTest2() {
 		MongoClient client = null;
 		try {
-			client = new MongoClient("127.0.0.1", 27017);
+			client = new MongoClient("192.168.0.242", 27001);
 		} catch (UnknownHostException e) {
 			System.err.println("can't connect to the server");
 			e.printStackTrace();
 			return;
 		}
 		
-		DB database = client.getDB("france");
-		DBCollection collection = database.getCollection("Recherche_avancee3");
+		DB database = client.getDB("core");
+		DBCollection collection = database.getCollection("institution_basic");
 		
 		DBObject query = new BasicDBObject();
-		query.put("Dénomination sociale", "ASTRAZENECA");
+		query.put("_id", 92015582);
 
 		DBCursor cursor = collection.find(query);
 		System.out.println(cursor.count());
@@ -59,8 +59,45 @@ public class FindTest {
 
 		client.close();
 	}
+	
+	public static void findAndwrite() {
+		MongoClient client = null;
+		try {
+			client = new MongoClient("192.168.0.252", 27017);
+		} catch (UnknownHostException e) {
+			System.err.println("can't connect to the server");
+			e.printStackTrace();
+			return;
+		}
+		
+		DB database = client.getDB("Metrix");
+		DBCollection collection1 = database.getCollection("PapersPubmedGrab");
+		DBCollection collection2 = database.getCollection("PapersPubmedGrab.need");
+		
+		DBObject query = new BasicDBObject();
+		query.put("content.Publish_Year", "2015");
+		DBObject keys = new BasicDBObject();
+		keys.put("content.authorList", 1);
+		keys.put("_id", 1);
+
+		DBCursor cursor = collection1.find(query, keys);
+	//	System.out.println(cursor.size());\
+		int i = 0;
+		while (cursor.hasNext()) {
+			DBObject element = cursor.next();
+			DBObject insert = new BasicDBObject();
+			insert.put("_id", element.get("_id"));
+			insert.put("authorList", ((DBObject) element.get("content")).get("authorList"));
+			System.out.println(insert);
+			collection2.insert(insert);
+		//	collection2.insert(element);
+			System.out.println(++i);
+		}
+		
+		client.close();
+	}
 
 	public static void main(String[] args) {
-		findTest2();
+		findAndwrite();
 	}
 }
