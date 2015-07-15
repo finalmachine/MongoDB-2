@@ -73,7 +73,7 @@ public class FindTest {
 		DB database = client.getDB("Metrix");
 		DBCollection collection1 = database.getCollection("PapersPubmedGrab");
 		DBCollection collection2 = database.getCollection("PapersPubmedGrab.need");
-		
+
 		DBObject query = new BasicDBObject();
 		query.put("content.Publish_Year", "2015");
 		DBObject keys = new BasicDBObject();
