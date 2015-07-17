@@ -72,28 +72,29 @@ public class FindTest {
 		
 		DB database = client.getDB("Metrix");
 		DBCollection collection1 = database.getCollection("PapersPubmedGrab");
-		DBCollection collection2 = database.getCollection("PapersPubmedGrab.need");
+		DBCollection collection2 = database.getCollection("PapersPubmedGrab.use");
 
 		DBObject query = new BasicDBObject();
-		query.put("content.Publish_Year", "2015");
+	//	query.put("content.Publish_Year", "2015");
 		DBObject keys = new BasicDBObject();
-		keys.put("content.authorList", 1);
 		keys.put("_id", 1);
+		keys.put("content.authorList", 1);
+		DBObject orderBy = new BasicDBObject();
+		orderBy.put("_id", -1);
 
-		DBCursor cursor = collection1.find(query, keys);
-	//	System.out.println(cursor.size());\
+		DBCursor cursor = collection1.find(query, keys).sort(orderBy).limit(100000);
+		System.out.println(cursor.size());
 		int i = 0;
 		while (cursor.hasNext()) {
-			DBObject element = cursor.next();
+			BasicDBObject element = (BasicDBObject)cursor.next();
 			DBObject insert = new BasicDBObject();
 			insert.put("_id", element.get("_id"));
 			insert.put("authorList", ((DBObject) element.get("content")).get("authorList"));
-			System.out.println(insert);
+			System.out.println(element);
 			collection2.insert(insert);
 		//	collection2.insert(element);
 			System.out.println(++i);
 		}
-		
 		client.close();
 	}
 
