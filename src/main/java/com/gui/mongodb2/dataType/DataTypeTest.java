@@ -10,8 +10,7 @@ import com.mongodb.MongoClient;
 
 public class DataTypeTest {
 
-	@SuppressWarnings("unused")
-	private static void test1() {
+	public static void test1() {
 		MongoClient client = null;
 		try {
 			client = new MongoClient("192.168.0.242", 27001);
@@ -38,8 +37,6 @@ public class DataTypeTest {
 	}
 	
 	public static void main(String[] args) {
-	//	test1();
-		Double d = 0.000447;
-		System.out.println(d);
+		test1();
 	}
 }

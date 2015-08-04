@@ -8,9 +8,11 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
-public class CopyTest {
+public class CopyUtil {
 	
-	public static void copyCollection1(String collectionName) {
+	public static final String suffix = ".copy"; 
+	
+	public static void copyCollection(String collectionName) {
 		MongoClient client = null;
 		try {
 			client = new MongoClient("127.0.0.1", 27017);
@@ -22,7 +24,7 @@ public class CopyTest {
 		
 		DB database = client.getDB("test");
 		DBCollection collection1 = database.getCollection(collectionName);
-		DBCollection collection2 = database.getCollection(collectionName + "_copy");
+		DBCollection collection2 = database.getCollection(collectionName + suffix);
 		
 		collection2.drop();
 		DBCursor cursor = collection1.find();
@@ -35,7 +37,7 @@ public class CopyTest {
 		System.out.println("copy " + collectionName + " finished");
 	}
 	
-	public static void copyCollection2(String collectionFrom, String collectionTo) {
+	public static void copyCollection(String collectionFrom, String collectionTo) {
 		MongoClient client = null;
 		try {
 			client = new MongoClient("127.0.0.1", 27017);
@@ -61,7 +63,7 @@ public class CopyTest {
 	}
 	
 	public static void main(String[] args) {
-		copyCollection2("test_table1", "test_table1_create");
-		copyCollection2("test_table1_remove.log", "test_table1_create.log");
+		copyCollection("test_table1", "test_table1_create");
+		copyCollection("test_table1_remove.log", "test_table1_create.log");
 	}
 }
