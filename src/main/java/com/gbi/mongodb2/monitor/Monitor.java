@@ -54,7 +54,7 @@ public class Monitor implements Closeable {
 		collection2 = db.getCollection(collection_log);
 	}
 
-	public void log() {
+	public long log() {
 		if (client == null || collection1 == null || collection2 == null) {
 			throw new RuntimeException("没有调用run函数");
 		}
@@ -115,6 +115,7 @@ public class Monitor implements Closeable {
 				insert1(id, time, currentEntity);
 			}
 		}
+		return time;
 	}
 
 	public void insert1(final Object id, final long time, final DBObject currentObj) {
@@ -191,6 +192,56 @@ public class Monitor implements Closeable {
 			++update;
 		}
 	}
+	
+	public void recovery(long time) {
+		if (client == null || collection1 == null || collection2 == null) {
+			throw new RuntimeException("没有调用run函数");
+		}
+		DBCursor cursor = collection2.find();
+		for (DBObject log : cursor) {
+			DBObject now = (DBObject) log.get("image");
+			BasicDBList history = (BasicDBList) log.get("history");
+			boolean changed = false;
+			for (int i = history.size() - 1; i >= 0; --i) {
+				DBObject option = (DBObject) history.get(i);
+				if ((long) option.get("time") <= time) {
+					break;
+				} else {
+					switch ((String) option.get("option")) {
+					case "create":
+						now = new BasicDBObject();
+						break;
+					case "delete":
+						now = (DBObject) option.get("detail");
+						break;
+					case "update":
+						DBObject detail = (DBObject) option.get("detail");
+						for (String key : detail.keySet()) {
+							Object obj = detail.get(key);
+							if (obj == null) {
+								now.removeField(key);
+							} else {
+								now.put(key, obj);
+							}
+						}
+						break;
+					default:
+						System.out.println("有一个错误的命令操作:" + option.get("option"));
+						break;
+					}
+					changed = true;
+				}
+			}
+			if (changed) {
+				if (now.keySet().size() > 0) {
+					collection1.save(now);
+				} else {
+					collection1.remove(new BasicDBObject("_id", log.get("_id")));
+				}
+			}
+		}
+		System.out.println("recovery finish");
+	}
 
 	@Override
 	public void close() {
@@ -199,18 +250,14 @@ public class Monitor implements Closeable {
 
 	public static void main(String[] args) {
 		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				"source_cd");
+				"proxy");
 		try {
 			m.open();
-			m.log();
+			m.recovery(1438759258836L);
 			m.close();
 		} catch (UnknownHostException e) {
 			System.err.println("地址有问题");
 		}
-		System.out.println("insert:" + m.insert);
-		System.out.println("create:" + m.create);
-		System.out.println("remove:" + m.delete);
-		System.out.println("change:" + m.update);
 	}
 
 	public int getCreate() {

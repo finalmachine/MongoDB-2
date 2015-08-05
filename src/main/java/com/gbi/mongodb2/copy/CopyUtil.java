@@ -64,7 +64,8 @@ public class CopyUtil {
 	}
 	
 	public static void main(String[] args) {
-		copyCollection("source", "source_cd");
-		copyCollection("source.log", "source_cd.log");
+	//	copyCollection("source", "source_cd");
+	//	copyCollection("source.log", "source_cd.log");
+		copyCollection("proxy");
 	}
 }

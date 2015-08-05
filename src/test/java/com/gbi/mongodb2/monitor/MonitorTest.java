@@ -171,7 +171,7 @@ public class MonitorTest {
 		
 		DBCollection c = getCollection(table);
 		c.remove(new BasicDBObject("_id", 1));
-		
+
 		DBObject people1 = c.findOne(new BasicDBObject("_id", 2));
 		people1.put("age", 23);
 		c.save(people1);
@@ -186,11 +186,23 @@ public class MonitorTest {
 		System.out.println("delete:" + m.getDelete());
 		System.out.println("change:" + m.getUpdate());
 	}
+	
+	public static void test1() throws Exception {
+		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
+				"proxy");
+		m.open();
+		m.log();
+		m.close();
+		System.out.println("insert:" + m.getInsert());
+		System.out.println("create:" + m.getCreate());
+		System.out.println("delete:" + m.getDelete());
+		System.out.println("change:" + m.getUpdate());
+	}
 
 	public static void main(String[] args) throws Exception {
 		open();
 		
-		test_du();
+		test1();
 		
 		close();
 	}

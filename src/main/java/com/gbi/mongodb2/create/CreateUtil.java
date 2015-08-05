@@ -78,7 +78,7 @@ public class CreateUtil {
 		people3.put("_id", 4);
 		people3.put("name", "尹志平");
 		people3.put("age", 20);
-		collection.save(people3);
+		System.out.println(collection.save(people3));
 		
 		client.close();
 	}
