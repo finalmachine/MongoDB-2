@@ -21,7 +21,7 @@ public class DBCollectionComparator {
 			DBObject o2 = c2.next();
 			if (!o1.equals(o2)) {
 				System.out.println(o1);
-				System.out.println(02);
+				System.out.println(o2);
 				return false;
 			}
 		}
