@@ -240,7 +240,9 @@ public class Monitor implements Closeable {
 				}
 			}
 		}
-		System.out.println("recovery finish");
+		System.out.println("begin log " + collection);
+		log();
+		System.out.println("recovery finish " + collection);
 	}
 
 	@Override
@@ -253,7 +255,7 @@ public class Monitor implements Closeable {
 				"proxy");
 		try {
 			m.open();
-			m.recovery(1438759258836L);
+			m.recovery(1438817820884L);
 			m.close();
 		} catch (UnknownHostException e) {
 			System.err.println("地址有问题");

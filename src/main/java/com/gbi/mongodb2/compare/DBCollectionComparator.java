@@ -33,6 +33,6 @@ public class DBCollectionComparator {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(compareTwoCollection("127.0.0.1", 27017, "TEST", "proxy", "127.0.0.1", 27017, "TEST", "proxy1"));
+		System.out.println(compareTwoCollection("127.0.0.1", 27017, "TEST", "proxy", "127.0.0.1", 27017, "TEST", "proxy_8"));
 	}
 }
