@@ -41,7 +41,51 @@ public class CreateUtil {
 		client.close();
 	}
 	
+	public static void addTestInfo_c() {
+		MongoClient client = null;
+		try {
+			client = new MongoClient(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
+		} catch (UnknownHostException e) {
+			System.err.println("can't connect to the server");
+			e.printStackTrace();
+			return;
+		}
+		
+		DBCollection collection = client.getDB(Params.MongoDB.TEST.database).getCollection("source_c");
+		
+		BasicDBObject people3 = new BasicDBObject();
+		people3.put("_id", 4);
+		people3.put("name", "尹志平");
+		people3.put("age", 20);
+		collection.save(people3);
+		
+		client.close();
+	}
+	
+	public static void addTestInfo_cd() {
+		MongoClient client = null;
+		try {
+			client = new MongoClient(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
+		} catch (UnknownHostException e) {
+			System.err.println("can't connect to the server");
+			e.printStackTrace();
+			return;
+		}
+		
+		DBCollection collection = client.getDB(Params.MongoDB.TEST.database).getCollection("source_cd");
+		
+		BasicDBObject people3 = new BasicDBObject();
+		people3.put("_id", 4);
+		people3.put("name", "尹志平");
+		people3.put("age", 20);
+		collection.save(people3);
+		
+		client.close();
+	}
+	
 	public static void main(String[] args) {
-		createTestInfo();
+	//	createTestInfo();
+	//	addTestInfo_c();
+		addTestInfo_cd();
 	}
 }

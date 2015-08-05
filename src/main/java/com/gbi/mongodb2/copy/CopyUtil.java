@@ -2,6 +2,7 @@ package com.gbi.mongodb2.copy;
 
 import java.net.UnknownHostException;
 
+import com.gbi.commons.config.Params;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -15,14 +16,14 @@ public class CopyUtil {
 	public static void copyCollection(String collectionName) {
 		MongoClient client = null;
 		try {
-			client = new MongoClient("127.0.0.1", 27017);
+			client = new MongoClient(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		} catch (UnknownHostException e) {
 			System.err.println("can't connect to the server");
 			e.printStackTrace();
 			return;
 		}
 		
-		DB database = client.getDB("test");
+		DB database = client.getDB(Params.MongoDB.TEST.database);
 		DBCollection collection1 = database.getCollection(collectionName);
 		DBCollection collection2 = database.getCollection(collectionName + suffix);
 		
@@ -40,14 +41,14 @@ public class CopyUtil {
 	public static void copyCollection(String collectionFrom, String collectionTo) {
 		MongoClient client = null;
 		try {
-			client = new MongoClient("127.0.0.1", 27017);
+			client = new MongoClient(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		} catch (UnknownHostException e) {
 			System.err.println("can't connect to the server");
 			e.printStackTrace();
 			return;
 		}
 		
-		DB database = client.getDB("test");
+		DB database = client.getDB(Params.MongoDB.TEST.database);
 		DBCollection collection1 = database.getCollection(collectionFrom);
 		DBCollection collection2 = database.getCollection(collectionTo);
 		
@@ -63,7 +64,7 @@ public class CopyUtil {
 	}
 	
 	public static void main(String[] args) {
-		copyCollection("test_table1", "test_table1_create");
-		copyCollection("test_table1_remove.log", "test_table1_create.log");
+		copyCollection("source", "source_cd");
+		copyCollection("source.log", "source_cd.log");
 	}
 }

@@ -13,6 +13,8 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
 public class Monitor implements Closeable {
+	
+	public static final String suffix = ".log";
 
 	private String host;
 	private int port;
@@ -26,9 +28,17 @@ public class Monitor implements Closeable {
 
 	private int create;
 	private int insert;
-	private int remove;
-	private int change;
+	private int delete;
+	private int update;
 
+	public Monitor(String host, int port, String database, String collection) {
+		this.host = host;
+		this.port = port;
+		this.database = database;
+		this.collection = collection;
+		this.collection_log = collection + suffix;
+	}
+	
 	public Monitor(String host, int port, String database, String collection, String collection_log) {
 		this.host = host;
 		this.port = port;
@@ -51,8 +61,8 @@ public class Monitor implements Closeable {
 
 		create = 0;
 		insert = 0;
-		remove = 0;
-		change = 0;
+		delete = 0;
+		update = 0;
 		long time = System.currentTimeMillis();
 
 		BasicDBObject ref = new BasicDBObject();
@@ -120,7 +130,7 @@ public class Monitor implements Closeable {
 		// 准备一条log结束
 		collection2.insert(newLog);
 
-		++insert;
+		++create;
 	}
 
 	public void insert2(final Object id, final long time, final DBObject currentObj, DBObject log) {
@@ -134,14 +144,14 @@ public class Monitor implements Closeable {
 		// update image <
 		collection2.save(log);
 
-		++create;
+		++insert;
 	}
 
 	private DBObject insert_prepare_option(final long time, final DBObject currentObj) {
 		DBObject option = new BasicDBObject();
 		// 准备一条option >
 		option.put("time", time);
-		option.put("option", "insert");
+		option.put("option", "create");
 		option.put("detail", currentObj);
 		// 准备一条option <
 		return option;
@@ -152,7 +162,7 @@ public class Monitor implements Closeable {
 		BasicDBList history = (BasicDBList) log.get("history");
 		DBObject option = new BasicDBObject();
 		option.put("time", time);
-		option.put("option", "remove");
+		option.put("option", "delete");
 		option.put("detail", log.get("image"));
 		history.add(option);
 		// prepare history <
@@ -160,7 +170,7 @@ public class Monitor implements Closeable {
 		log.put("image", null);
 
 		collection2.save(log);
-		++remove;
+		++delete;
 	}
 
 	private void change(long time, final DBObject currentObj, DBObject log, DBObject detail) {
@@ -170,15 +180,15 @@ public class Monitor implements Closeable {
 			// prepare option >
 			DBObject option = new BasicDBObject();
 			option.put("time", time);
-			option.put("option", "change");
+			option.put("option", "update");
 			option.put("detail", detail);
 			// prepare option <
-			history.add(detail);
+			history.add(option);
 			// update history <
 			log.put("history", history);
 			log.put("image", currentObj);
 			collection2.save(log);
-			++change;
+			++update;
 		}
 	}
 
@@ -189,7 +199,7 @@ public class Monitor implements Closeable {
 
 	public static void main(String[] args) {
 		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				"test_table1_create", "test_table1_create.log");
+				"source_cd");
 		try {
 			m.open();
 			m.log();
@@ -199,7 +209,23 @@ public class Monitor implements Closeable {
 		}
 		System.out.println("insert:" + m.insert);
 		System.out.println("create:" + m.create);
-		System.out.println("remove:" + m.remove);
-		System.out.println("change:" + m.change);
+		System.out.println("remove:" + m.delete);
+		System.out.println("change:" + m.update);
+	}
+
+	public int getCreate() {
+		return create;
+	}
+
+	public int getInsert() {
+		return insert;
+	}
+
+	public int getDelete() {
+		return delete;
+	}
+
+	public int getUpdate() {
+		return update;
 	}
 }
