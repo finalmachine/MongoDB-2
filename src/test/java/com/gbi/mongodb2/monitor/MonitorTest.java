@@ -106,10 +106,91 @@ public class MonitorTest {
 		System.out.println("change:" + m.getUpdate());
 	}
 
+	public static void test_dc() throws Exception {
+		String table = "source_dc";
+		CopyUtil.copyCollection("source", table);
+		CopyUtil.copyCollection("source.log", table + ".log");
+		
+		DBCollection c = getCollection(table);
+		c.remove(new BasicDBObject("_id", 1));
+		
+		DBObject people1 = new BasicDBObject();
+		people1.put("_id", 1);
+		people1.put("name", "尹志平");
+		people1.put("age", 20);
+		c.save(people1);
+		
+		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
+				table);
+		m.open();
+		m.log();
+		m.close();
+		System.out.println("insert:" + m.getInsert());
+		System.out.println("create:" + m.getCreate());
+		System.out.println("delete:" + m.getDelete());
+		System.out.println("change:" + m.getUpdate());
+	}
+	
+	public static void test_d_c() throws Exception {
+		String table = "source_d_c";
+		CopyUtil.copyCollection("source", table);
+		CopyUtil.copyCollection("source.log", table + ".log");
+		
+		DBCollection c = getCollection(table);
+		c.remove(new BasicDBObject("_id", 1));
+		
+		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
+				table);
+		m.open();
+		m.log();
+		m.close();
+		System.out.println("insert:" + m.getInsert());
+		System.out.println("create:" + m.getCreate());
+		System.out.println("delete:" + m.getDelete());
+		System.out.println("change:" + m.getUpdate());
+		
+		DBObject people1 = new BasicDBObject();
+		people1.put("_id", 1);
+		people1.put("name", "尹志平");
+		people1.put("age", 20);
+		c.save(people1);
+
+		m.open();
+		m.log();
+		m.close();
+		System.out.println("insert:" + m.getInsert());
+		System.out.println("create:" + m.getCreate());
+		System.out.println("delete:" + m.getDelete());
+		System.out.println("change:" + m.getUpdate());
+	}
+	
+	public static void test_du() throws Exception {
+		String table = "source_du";
+		CopyUtil.copyCollection("source", table);
+		CopyUtil.copyCollection("source.log", table + ".log");
+		
+		DBCollection c = getCollection(table);
+		c.remove(new BasicDBObject("_id", 1));
+		
+		DBObject people1 = c.findOne(new BasicDBObject("_id", 2));
+		people1.put("age", 23);
+		c.save(people1);
+
+		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
+				table);
+		m.open();
+		m.log();
+		m.close();
+		System.out.println("insert:" + m.getInsert());
+		System.out.println("create:" + m.getCreate());
+		System.out.println("delete:" + m.getDelete());
+		System.out.println("change:" + m.getUpdate());
+	}
+
 	public static void main(String[] args) throws Exception {
 		open();
 		
-		test_cud();
+		test_du();
 		
 		close();
 	}
