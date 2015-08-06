@@ -43,13 +43,16 @@ public class DBMonitor implements Closeable {
 			System.err.println("monitor没有开启，请先调用open函数");
 			return -1;
 		}
+		Set<String> collectionNames = _client.getDB(DB).getCollectionNames();
+		if (!collectionNames.contains(collection)) {
+			throw new RuntimeException("不存在该表:" + DB + "." + collection);
+		}
+		_collection1 = _client.getDB(DB).getCollection(collection);
+		_collection2 = _client.getDB(DB).getCollection(collection + suffix);
 		create = 0;
 		insert = 0;
 		delete = 0;
 		update = 0;
-
-		_collection1 = _client.getDB(DB).getCollection(collection);
-		_collection2 = _client.getDB(DB).getCollection(collection + suffix);
 		
 		long time = System.currentTimeMillis();
 
@@ -65,7 +68,7 @@ public class DBMonitor implements Closeable {
 													// id
 				DBObject log = _collection2.findOne(id2);
 				if (log.get("image") != null) {// not have been removed
-					remove(time, log);
+					delete(time, log);
 				}
 			}
 		}
@@ -79,7 +82,7 @@ public class DBMonitor implements Closeable {
 			DBObject log = _collection2.findOne(ref);
 			if (log != null) { // 有一个同样id的
 				if (log.get("image") == null) {// 在回收站
-					insert2(id, time, currentEntity, log);
+					insert(time, currentEntity, log);
 				} else {// 不在回收站
 					DBObject image = (DBObject) log.get("image");
 					DBObject detail = new BasicDBObject();
@@ -100,53 +103,43 @@ public class DBMonitor implements Closeable {
 					change(time, currentEntity, log, detail);
 				}
 			} else { // 肯定没有这个数据
-				insert1(id, time, currentEntity);
+				insert(time, currentEntity, null);
 			}
 		}
 		return time;
 	}
 
-	public void insert1(final Object id, final long time, final DBObject currentObj) {
-		DBObject newLog = new BasicDBObject();
-		// 准备一条log开始
-		newLog.put("_id", id);
-		newLog.put("image", currentObj);
-		// 准备history列表开始
-		BasicDBList history = new BasicDBList();
-		history.add(insert_prepare_option(time, currentObj));
-		// 准备history列表完成
-		newLog.put("history", history);
-		// 准备一条log结束
-		_collection2.insert(newLog);
-
-		++create;
-	}
-
-	public void insert2(final Object id, final long time, final DBObject currentObj, DBObject log) {
-		BasicDBList history = (BasicDBList) log.get("history");
-		// update history >
-		history.add(insert_prepare_option(time, currentObj));
-		// update history <
-		log.put("history", history);
+	public void insert(final long time, final DBObject currentObj, DBObject log) {
+		BasicDBList history = null;
+		if (log == null) {
+			log = new BasicDBObject("_id", currentObj.get("_id"));
+			history = new BasicDBList();
+			++create;
+		} else {
+			history = (BasicDBList) log.get("history");
+			++insert;
+		}
 		// update image >
 		log.put("image", currentObj);
 		// update image <
+		// update history >
+		history.add(insert_prepare_option(time));
+		// update history <
+		log.put("history", history);
 		_collection2.save(log);
-
-		++insert;
 	}
 
-	private DBObject insert_prepare_option(final long time, final DBObject currentObj) {
+	private DBObject insert_prepare_option(final long time) {
 		DBObject option = new BasicDBObject();
 		// 准备一条option >
 		option.put("time", time);
 		option.put("option", "create");
-		option.put("detail", currentObj);
+		option.put("detail", null);
 		// 准备一条option <
 		return option;
 	}
 
-	private void remove(long time, DBObject log) {
+	private void delete(long time, DBObject log) {
 		// prepare history >
 		BasicDBList history = (BasicDBList) log.get("history");
 		DBObject option = new BasicDBObject();
@@ -189,6 +182,7 @@ public class DBMonitor implements Closeable {
 		Set<String> collectionNames = _client.getDB(DB).getCollectionNames();
 		if (!collectionNames.contains(collection) || !collectionNames.contains(collection + suffix)) {
 			System.err.println("你选择的表不符合还原的条件");
+			return;
 		}
 		_collection1 = _client.getDB(DB).getCollection(collection);
 		_collection2 = _client.getDB(DB).getCollection(collection + suffix);

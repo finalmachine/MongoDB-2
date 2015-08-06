@@ -255,7 +255,7 @@ public class MonitorTest {
 		browser.close();
 	}
 	
-	public static void test1() throws Exception {
+	public static void log_test1() throws Exception {
 		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		m.open();
 		m.log(Params.MongoDB.TEST.database,	"proxy");
@@ -265,11 +265,19 @@ public class MonitorTest {
 		System.out.println("delete:" + m.getDelete());
 		System.out.println("change:" + m.getUpdate());
 	}
+	
+	public static void recovery_test1() throws Exception {
+		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
+		m.open();
+		m.recovery(1438851189650L, Params.MongoDB.TEST.database, "proxy");
+		m.close();
+	}
 
 	public static void main(String[] args) throws Exception {
-		open();
-		//GrabYoudaili();
-		test1();
-		close();
+	//	open();
+	//	GrabYoudaili();
+	//	close();
+	//	log_test1();
+		recovery_test1();
 	}
 }
