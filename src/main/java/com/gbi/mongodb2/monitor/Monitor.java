@@ -252,10 +252,10 @@ public class Monitor implements Closeable {
 
 	public static void main(String[] args) {
 		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				"proxy");
+				"source_c");
 		try {
 			m.open();
-			m.recovery(1438817820884L);
+			m.recovery(1438736661840L);
 			m.close();
 		} catch (UnknownHostException e) {
 			System.err.println("地址有问题");
