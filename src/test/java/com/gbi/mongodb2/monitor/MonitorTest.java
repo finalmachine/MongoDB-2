@@ -51,10 +51,9 @@ public class MonitorTest {
 		c.save(people1);
 		c.remove(new BasicDBObject("_id", 1));
 		
-		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				table);
+		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		m.open();
-		m.log();
+		m.log(Params.MongoDB.TEST.database,	table);
 		m.close();
 		System.out.println("insert:" + m.getInsert());
 		System.out.println("create:" + m.getCreate());
@@ -77,10 +76,9 @@ public class MonitorTest {
 		people1.put("age", 22);
 		c.save(people1);
 		
-		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				table);
+		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		m.open();
-		m.log();
+		m.log(Params.MongoDB.TEST.database,	table);
 		m.close();
 		System.out.println("insert:" + m.getInsert());
 		System.out.println("create:" + m.getCreate());
@@ -105,10 +103,9 @@ public class MonitorTest {
 		
 		c.remove(people1);
 		
-		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				table);
+		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		m.open();
-		m.log();
+		m.log(Params.MongoDB.TEST.database,	table);
 		m.close();
 		System.out.println("insert:" + m.getInsert());
 		System.out.println("create:" + m.getCreate());
@@ -130,10 +127,9 @@ public class MonitorTest {
 		people1.put("age", 20);
 		c.save(people1);
 		
-		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				table);
+		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		m.open();
-		m.log();
+		m.log(Params.MongoDB.TEST.database,	table);
 		m.close();
 		System.out.println("insert:" + m.getInsert());
 		System.out.println("create:" + m.getCreate());
@@ -149,10 +145,9 @@ public class MonitorTest {
 		DBCollection c = getCollection(table);
 		c.remove(new BasicDBObject("_id", 1));
 		
-		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				table);
+		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		m.open();
-		m.log();
+		m.log(Params.MongoDB.TEST.database,	table);
 		m.close();
 		System.out.println("insert:" + m.getInsert());
 		System.out.println("create:" + m.getCreate());
@@ -166,7 +161,7 @@ public class MonitorTest {
 		c.save(people1);
 
 		m.open();
-		m.log();
+		m.log(Params.MongoDB.TEST.database,	table);
 		m.close();
 		System.out.println("insert:" + m.getInsert());
 		System.out.println("create:" + m.getCreate());
@@ -186,10 +181,9 @@ public class MonitorTest {
 		people1.put("age", 23);
 		c.save(people1);
 
-		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				table);
+		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		m.open();
-		m.log();
+		m.log(Params.MongoDB.TEST.database,	table);
 		m.close();
 		System.out.println("insert:" + m.getInsert());
 		System.out.println("create:" + m.getCreate());
@@ -262,10 +256,9 @@ public class MonitorTest {
 	}
 	
 	public static void test1() throws Exception {
-		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				"proxy");
+		DBMonitor m = new DBMonitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port);
 		m.open();
-		m.log();
+		m.log(Params.MongoDB.TEST.database,	"proxy");
 		m.close();
 		System.out.println("insert:" + m.getInsert());
 		System.out.println("create:" + m.getCreate());

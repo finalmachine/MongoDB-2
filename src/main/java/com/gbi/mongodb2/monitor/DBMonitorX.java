@@ -2,67 +2,55 @@ package com.gbi.mongodb2.monitor;
 
 import java.io.Closeable;
 import java.net.UnknownHostException;
+import java.util.Set;
 
-import com.gbi.commons.config.Params;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
-public class Monitor implements Closeable {
-	
+/**
+ * 一个DBMonitor实体只能用于一个MongoDB集群
+ * @author leo.li
+ */
+public class DBMonitorX implements Closeable {
 	public static final String suffix = ".log";
 
-	private String host;
-	private int port;
-	private String database;
-	private String collection;
-	private String collection_log;
+	private String _host;
+	private int _port;
+	private MongoClient _client = null;
 
-	private MongoClient client = null;
-	private DBCollection collection1 = null;
-	private DBCollection collection2 = null;
-
+	DBCollection _collection1 = null;
+	DBCollection _collection2 = null;
 	private int create;
 	private int insert;
 	private int delete;
 	private int update;
 
-	public Monitor(String host, int port, String database, String collection) {
-		this.host = host;
-		this.port = port;
-		this.database = database;
-		this.collection = collection;
-		this.collection_log = collection + suffix;
-	}
-	
-	public Monitor(String host, int port, String database, String collection, String collection_log) {
-		this.host = host;
-		this.port = port;
-		this.database = database;
-		this.collection = collection;
-		this.collection_log = collection_log;
+	public DBMonitorX(String host, int port) {
+		_host = host;
+		_port = port;
 	}
 
 	public void open() throws UnknownHostException {
-		client = new MongoClient(host, port);
-		DB db = client.getDB(database);
-		collection1 = db.getCollection(collection);
-		collection2 = db.getCollection(collection_log);
+		_client = new MongoClient(_host, _port);
 	}
 
-	public long log() {
-		if (client == null || collection1 == null || collection2 == null) {
-			throw new RuntimeException("没有调用run函数");
+	public long log(String DB, String collection) {
+		if (_client == null) {
+			System.err.println("monitor没有开启，请先调用open函数");
+			return -1;
 		}
-
 		create = 0;
 		insert = 0;
 		delete = 0;
 		update = 0;
+
+		_collection1 = _client.getDB(DB).getCollection(collection);
+		_collection2 = _client.getDB(DB).getCollection(collection + suffix);
+		
 		long time = System.currentTimeMillis();
 
 		BasicDBObject ref = new BasicDBObject();
@@ -70,28 +58,28 @@ public class Monitor implements Closeable {
 		key.put("_id", 1);
 
 		// go through collection2
-		DBCursor cursor = collection2.find(ref, key);
+		DBCursor cursor = _collection2.find(ref, key);
 		while (cursor.hasNext()) {
 			DBObject id2 = (DBObject) cursor.next();
-			if (collection1.findOne(id2) == null) {// collection1 not have the
+			if (_collection1.findOne(id2) == null) {// collection1 not have the
 													// id
-				DBObject log = collection2.findOne(id2);
+				DBObject log = _collection2.findOne(id2);
 				if (log.get("image") != null) {// not have been removed
-					remove(time, log);
+					delete(time, log);
 				}
 			}
 		}
 
 		// go through collection1
-		cursor = collection1.find();
+		cursor = _collection1.find();
 		while (cursor.hasNext()) {
 			DBObject currentEntity = cursor.next();
 			Object id = currentEntity.get("_id");
 			ref.put("_id", id);
-			DBObject log = collection2.findOne(ref);
+			DBObject log = _collection2.findOne(ref);
 			if (log != null) { // 有一个同样id的
 				if (log.get("image") == null) {// 在回收站
-					insert2(id, time, currentEntity, log);
+					insert(time, currentEntity, log);
 				} else {// 不在回收站
 					DBObject image = (DBObject) log.get("image");
 					DBObject detail = new BasicDBObject();
@@ -100,7 +88,7 @@ public class Monitor implements Closeable {
 							if (!image.get(currentKey).equals(currentEntity.get(currentKey))) {// change
 								detail.put(currentKey, image.get(currentKey));
 							}
-						} else {// add
+						} else {// 增加了字段
 							detail.put(currentKey, null);
 						}
 					}
@@ -112,53 +100,43 @@ public class Monitor implements Closeable {
 					change(time, currentEntity, log, detail);
 				}
 			} else { // 肯定没有这个数据
-				insert1(id, time, currentEntity);
+				insert(time, currentEntity, null);
 			}
 		}
 		return time;
 	}
 
-	public void insert1(final Object id, final long time, final DBObject currentObj) {
-		DBObject newLog = new BasicDBObject();
-		// 准备一条log开始
-		newLog.put("_id", id);
-		newLog.put("image", currentObj);
-		// 准备history列表开始
-		BasicDBList history = new BasicDBList();
-		history.add(insert_prepare_option(time, currentObj));
-		// 准备history列表完成
-		newLog.put("history", history);
-		// 准备一条log结束
-		collection2.insert(newLog);
-
-		++create;
-	}
-
-	public void insert2(final Object id, final long time, final DBObject currentObj, DBObject log) {
-		BasicDBList history = (BasicDBList) log.get("history");
-		// update history >
-		history.add(insert_prepare_option(time, currentObj));
-		// update history <
-		log.put("history", history);
+	public void insert(final long time, final DBObject currentObj, DBObject log) {
+		BasicDBList history = null;
+		if (log == null) {
+			log = new BasicDBObject("_id", currentObj.get("_id"));
+			history = new BasicDBList();
+			++create;
+		} else {
+			history = (BasicDBList) log.get("history");
+			++insert;
+		}
 		// update image >
 		log.put("image", currentObj);
 		// update image <
-		collection2.save(log);
-
-		++insert;
+		// update history >
+		history.add(insert_prepare_option(time));
+		// update history <
+		log.put("history", history);
+		_collection2.save(log);
 	}
 
-	private DBObject insert_prepare_option(final long time, final DBObject currentObj) {
+	private DBObject insert_prepare_option(final long time) {
 		DBObject option = new BasicDBObject();
 		// 准备一条option >
 		option.put("time", time);
 		option.put("option", "create");
-		option.put("detail", currentObj);
+		option.put("detail", null);
 		// 准备一条option <
 		return option;
 	}
 
-	private void remove(long time, DBObject log) {
+	private void delete(long time, DBObject log) {
 		// prepare history >
 		BasicDBList history = (BasicDBList) log.get("history");
 		DBObject option = new BasicDBObject();
@@ -170,7 +148,7 @@ public class Monitor implements Closeable {
 		log.put("history", history);
 		log.put("image", null);
 
-		collection2.save(log);
+		_collection2.save(log);
 		++delete;
 	}
 
@@ -188,16 +166,24 @@ public class Monitor implements Closeable {
 			// update history <
 			log.put("history", history);
 			log.put("image", currentObj);
-			collection2.save(log);
+			_collection2.save(log);
 			++update;
 		}
 	}
 	
-	public void recovery(long time) {
-		if (client == null || collection1 == null || collection2 == null) {
-			throw new RuntimeException("没有调用run函数");
+	public void recovery(long time, String DB, String collection) {
+		if (_client == null) {
+			System.err.println("monitor没有开启，请先调用open函数");
+			return;
 		}
-		DBCursor cursor = collection2.find();
+		Set<String> collectionNames = _client.getDB(DB).getCollectionNames();
+		if (!collectionNames.contains(collection) || !collectionNames.contains(collection + suffix)) {
+			System.err.println("你选择的表不符合还原的条件");
+		}
+		_collection1 = _client.getDB(DB).getCollection(collection);
+		_collection2 = _client.getDB(DB).getCollection(collection + suffix);
+
+		DBCursor cursor = _collection2.find();
 		for (DBObject log : cursor) {
 			DBObject now = (DBObject) log.get("image");
 			BasicDBList history = (BasicDBList) log.get("history");
@@ -234,32 +220,20 @@ public class Monitor implements Closeable {
 			}
 			if (changed) {
 				if (now.keySet().size() > 0) {
-					collection1.save(now);
+					_collection1.save(now);
 				} else {
-					collection1.remove(new BasicDBObject("_id", log.get("_id")));
+					_collection1.remove(new BasicDBObject("_id", log.get("_id")));
 				}
 			}
 		}
 		System.out.println("begin log " + collection);
-		log();
+		log(DB, collection);
 		System.out.println("recovery finish " + collection);
 	}
 
 	@Override
 	public void close() {
-		client.close();
-	}
-
-	public static void main(String[] args) {
-		Monitor m = new Monitor(Params.MongoDB.TEST.host, Params.MongoDB.TEST.port, Params.MongoDB.TEST.database,
-				"source_c");
-		try {
-			m.open();
-			m.recovery(1438736661840L);
-			m.close();
-		} catch (UnknownHostException e) {
-			System.err.println("地址有问题");
-		}
+		_client.close();
 	}
 
 	public int getCreate() {
